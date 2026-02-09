@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import numpy
 
 
 @dataclass
@@ -16,10 +17,29 @@ class ObjConfig:
     model: str = ""
     max_fps: float = 0
 
+
 @dataclass
 class AprilTagConfig:
     max_fps: float = 0
+    fiducial_size: float = 0
+
 
 @dataclass
 class CameraConfig:
+    has_config: bool = False
+    camera_matrix: numpy.typing.NDArray[numpy.float64] = None
+    distortion_coefficients: numpy.typing.NDArray[numpy.float64] = None
+    camera_id: str = ""
+    camera_resolution_width: int = 0
+    camera_resolution_height: int = 0
+    camera_auto_exposure: int = 0
+    camera_exposure: int = 0
+    camera_gain: float = 0
+    camera_denoise: float = 0
 
+
+@dataclass
+class Logging:
+    is_recording: bool = True
+    time_stamp: int = 0
+    logging_location: str = ""
