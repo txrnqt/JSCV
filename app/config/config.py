@@ -22,7 +22,7 @@ class ObjConfig:
 class AprilTagConfig:
     max_fps: float = 0
     fiducial_size: float = 0
-
+    fiducial_layout: float = 0
 
 @dataclass
 class CameraConfig:
@@ -39,7 +39,10 @@ class CameraConfig:
 
 
 @dataclass
-class Logging:
+class LoggingConfig:
     is_recording: bool = True
     time_stamp: int = 0
     logging_location: str = ""
+    event_name: str = ""
+    match_type: str = ""
+    match_number: int = 0
