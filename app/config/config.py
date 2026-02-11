@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Optional
+
 import numpy
 
 
@@ -22,7 +24,8 @@ class ObjConfig:
 class AprilTagConfig:
     max_fps: float = 0
     fiducial_size: float = 0
-    fiducial_layout: float = 0
+    fiducial_layout: Optional[float] = 0
+
 
 @dataclass
 class CameraConfig:

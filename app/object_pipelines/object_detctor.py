@@ -1,5 +1,8 @@
+from typing import Optional
+
 import backends_yolo.detector_cpu as cpu
 import backends_yolo.detector_cuda as cuda
+from object_types import Results
 
 
 class object_detector:
@@ -26,20 +29,8 @@ class object_detector:
                 self.detector = cpu.DetectorCPU()
                 pass
 
-    def run_infrence(self, frame):
-        self.results = self.detector.run_inference(frame)
+    def run_infrence(self, frame) -> None:
+        self.detector.run_inference(frame)
 
-    def get_results(self):
-        if self.results is None:
-            return []
-        detections = []
-        for results in self.results:
-            for box in results.boxes:
-                detections.append(
-                    {
-                        "class": int(box.cls[0]),
-                        "confidance": float(box.conf[0]),
-                        "bbox": box.xyxy[0].tolist(),
-                    }
-                )
-        return detections
+    def get_results(self) -> Optional[Results]:
+        return self.detector.get_results()
