@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import coremltools
 import cv2
@@ -15,7 +15,9 @@ class DetectorCoreML:
     def __init__(self):
         self.model = coremltools.models.MLModel(ObjConfig.model)
 
-    def run_inference(self, frame: cv2.Mat, conf: float = 0.5) -> None:
+    def run_inference(
+        self, frame: cv2.Mat, conf: float = 0.5
+    ) -> Optional[List[Results]]:
         try:
             if len(frame.shape) == 2:
                 frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
@@ -63,7 +65,12 @@ class DetectorCoreML:
                 )
 
             self.results = observations
+            return self.results
 
         except Exception as e:
             print(f"Inference error: {e}")
             self.results = None
+            return None
+
+    def get_results(self) -> Optional[List[Results]]:
+        return self.results

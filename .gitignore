@@ -1,1 +1,62 @@
-.venv
+
+# =========================
+# Python
+# =========================
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.log
+
+# =========================
+# Gradle
+# =========================
+.gradle/
+build/
+out/
+
+# Keep wrapper jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# =========================
+# IntelliJ IDEA
+# =========================
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Eclipse
+# =========================
+.project
+.classpath
+.settings/
+bin/
+
+# =========================
+# NetBeans
+# =========================
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# =========================
+# Kotlin
+# =========================
+.kotlin/
+
+# =========================
+# macOS
+# =========================
+.DS_Store
