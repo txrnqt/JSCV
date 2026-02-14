@@ -54,6 +54,7 @@ class NTConfigSource:
     _match_number_sub: ntcore.IntegerSubscriber
     _fiducial_layout_sub: ntcore.DoubleSubscriber
     _fiducial_size_sub: ntcore.DoubleSubscriber
+    _backend_type_obj: ntcore.StringSubscriber
 
     def update(self):
         if not self._init_complete:
@@ -105,6 +106,9 @@ class NTConfigSource:
             self._fiducial_size = ntcore.getDoubleTopic("fiducial_size").subscribe(
                 config.AprilTagConfig.fiducial_size
             )
+            self._backend_type_obj = ntcore.getStringTopic(
+                "backend_type_object"
+            ).subscribe(config.ObjConfig.backend)
             self._init_complete = True
 
         config.CameraConfig.camera_id = self._camera_id_sub.get()
@@ -131,6 +135,7 @@ class NTConfigSource:
         config.LoggingConfig.event_name = self._event_name_sub.get()
         config.LoggingConfig.match_number = self._match_number_sub.get()
         config.AprilTagConfig.fiducial_size = self._fiducial_size.get()
+        config.ObjConfig.backend = self._backend_type_obj.get()
         try:
             config.AprilTagConfig.fiducial_layout = self._fiducial_layout.get()
         except:

@@ -16,6 +16,7 @@ class ServerConfig:
 
 @dataclass
 class ObjConfig:
+    backend: str = ""
     model: str = ""
     max_fps: float = 0
 
