@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from config.config import ObjConfig
-from object_types import Results
+from object_pipelines.object_types import Results
 from ultralytics import YOLO
 from ultralytics.engine.results import Results as YOLOResults
 
@@ -32,7 +32,7 @@ class DetectorCUDA:
                     parsed_results.append(
                         Results(
                             c_class=cls,
-                            confidance=confidence,
+                            confidence=confidence,
                             bbox=bbox,
                         )
                     )

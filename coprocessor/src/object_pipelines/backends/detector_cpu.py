@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from object_types import Results  # your dataclass
+from object_pipelines.object_types import Results
 from ultralytics import YOLO
 from ultralytics.engine.results import Results as YOLOResults
 
@@ -29,7 +29,7 @@ class DetectorCPU:
                     parsed_results.append(
                         Results(
                             c_class=cls,
-                            confidance=confidence,
+                            confidence=confidence,
                             bbox=bbox,
                         )
                     )

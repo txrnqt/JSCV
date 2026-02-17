@@ -5,6 +5,20 @@ import torch
 
 
 def find_accelerator() -> Dict[str, Any]:
+    """
+    Detect available hardware accelerators and GPU devices.
+
+    This function queries the system for supported compute backends such as
+    CUDA, cuDNN, and MPS, and collects metadata about detected GPUs.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing:
+            - "gpus" (List[Dict[str, Any]]): Detected GPU devices with
+              index and name.
+            - "accelerators" (List[str]): Names of available accelerator
+              backends (e.g., "CUDA", "cuDNN", "MPS").
+            - "os" (str): Host operating system name.
+    """
     result = {
         "gpus": [],
         "accelerators": [],
@@ -26,8 +40,3 @@ def find_accelerator() -> Dict[str, Any]:
         result["accelerators"].append("MPS")
 
     return result
-
-
-if __name__ == "__main__":
-    result = find_accelerator()
-    print(result)
