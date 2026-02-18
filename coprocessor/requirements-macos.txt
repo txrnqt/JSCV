@@ -1,6 +1,0 @@
-opencv-python>=4.9,<5
-torch>=2.2,<3
-ultralytics>=8.1,<9
-pillow>=10,<11
-robotpy-wpilib>=2024,<2026
-coremltools>=7,<8

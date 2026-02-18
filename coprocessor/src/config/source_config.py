@@ -1,5 +1,4 @@
 import json
-
 import config
 import cv2
 import ntcore
@@ -10,62 +9,39 @@ class LocalSourceConfig:
     """
     Loads configuration data from local files and applies it to in-memory
     configuration objects.
-
-    This class is responsible for reading static configuration sources such as
-    JSON server configs and camera calibration files and updating the provided
-    config dataclass instances.
     """
 
     def __init__(self, server_config_path: str):
-        """
-        Initialize a local configuration source.
-
-        Args:
-            server_config_path (str): Path to the JSON file containing
-                server configuration values.
-        """
+        """Initialize a local configuration source."""
         self.server_config_path = server_config_path
 
     def update_server_config(self, config_store: config.ServerConfig) -> None:
-        """
-        Load server configuration from a JSON file and update the given store.
+        """Load server configuration from JSON into the provided store."""
+        with open(self.server_config_path, "r", encoding="utf-8") as config_file:
+            config_data = json.load(config_file)
 
-        Args:
-            config_store (config.ServerConfig): Target configuration object
-                to populate with values from disk.
-        """
-        with open(self.server_config_path, "r") as config_file:
-            config_data = json.loads(config_file.read())
-            config_store.device_id = config_data["device_id"]
-            config_store.server_ip = config_data["server_ip"]
-            config_store.april_tag_port = config_data["april_tag_port"]
-            config_store.obj_port = config_data["obj_port"]
+        config_store.device_id = config_data.get("device_id", "")
+        config_store.server_ip = config_data.get("server_ip", "")
+        config_store.april_tag_port = config_data.get("april_tag_port", 0)
+        config_store.obj_port = config_data.get("obj_port", 0)
+        config_store.april_tag_tracking = config_data.get("april_tag_tracking", False)
+        config_store.obj_tracking = config_data.get("obj_tracking", False)
 
     def update_camera_constants(
         self, config_store: config.CameraConfig, path: str
     ) -> None:
-        """
-        Load camera calibration constants from an OpenCV file and update
-        the given camera configuration.
-
-        The calibration file is expected to contain `camera_matrix` and
-        `distortion_coefficients` nodes.
-
-        Args:
-            config_store (config.CameraConfig): Target camera configuration
-                object to update.
-            path (str): Path to the OpenCV calibration file.
-        """
+        """Load OpenCV camera calibration data into the provided store."""
         calibration_store = cv2.FileStorage(path, cv2.FILE_STORAGE_READ)
+
         camera_matrix = calibration_store.getNode("camera_matrix").mat()
         distortion_coefficients = calibration_store.getNode(
             "distortion_coefficients"
         ).mat()
+
         calibration_store.release()
 
-        if (
-            type(camera_matrix) is numpy.ndarray
-            and type(distortion_coefficients) is numpy.ndarray
+        if isinstance(camera_matrix, numpy.ndarray) and isinstance(
+            distortion_coefficients, numpy.ndarray
         ):
             config_store.camera_matrix = camera_matrix
             config_store.distortion_coefficients = distortion_coefficients
@@ -74,126 +50,137 @@ class LocalSourceConfig:
 
 class NTConfigSource:
     """
-    Retrieves configuration values from NetworkTables and synchronizes them
-    with global configuration objects.
-
-    This class lazily initializes NetworkTables subscribers and continuously
-    updates configuration values from network-published topics.
+    Synchronizes configuration values from NetworkTables into config objects.
     """
 
-    _init_complete: bool = False
-    _camera_id_sub: ntcore.StringSubscriber
-    _camera_resolution_width_sub: ntcore.IntegerSubscriber
-    _camera_resolution_height_sub: ntcore.IntegerSubscriber
-    _camera_auto_exposure_sub: ntcore.IntegerSubscriber
-    _camera_exposure_sub: ntcore.DoubleSubscriber
-    _camera_gain_sub: ntcore.DoubleSubscriber
-    _camera_denoise_sub: ntcore.DoubleSubscriber
-    _is_recording_sub: ntcore.BooleanSubscriber
-    _time_stamp_sub: ntcore.DoubleSubscriber
-    _logging_location_sub: ntcore.StringSubscriber
-    _event_name_sub: ntcore.StringSubscriber
-    _match_type_sub: ntcore.StringSubscriber
-    _match_number_sub: ntcore.IntegerSubscriber
-    _fiducial_layout_sub: ntcore.DoubleSubscriber
-    _fiducial_size_sub: ntcore.DoubleSubscriber
-    _backend_type_obj: ntcore.StringSubscriber
+    def __init__(
+        self,
+        server_config: config.ServerConfig,
+        camera_config: config.CameraConfig,
+        logging_config: config.LoggingConfig,
+        apriltag_config: config.AprilTagConfig,
+        obj_config: config.ObjConfig,
+    ):
+        self._server_config = server_config
+        self._camera_config = camera_config
+        self._logging_config = logging_config
+        self._apriltag_config = apriltag_config
+        self._obj_config = obj_config
+
+        self._init_complete = False
 
     def update(self) -> None:
-        """
-        Initialize NetworkTables subscriptions (if needed) and update all
-        configuration values from their corresponding topics.
-
-        This method should be called periodically to keep configuration
-        synchronized with NetworkTables.
-        """
+        """Initialize subscriptions if needed and pull latest values."""
         if not self._init_complete:
-            nt_table = ntcore.NetworkTableInsrance.getDefault().getTable(
-                "/" + config.ServerConfig.device_id + "/config"
+            nt_instance = ntcore.NetworkTableInstance.getDefault()
+            nt_table = nt_instance.getTable(
+                "/" + self._server_config.device_id + "/config"
             )
 
-            # Camera configuration subscriptions
+            # Camera subscriptions
             self._camera_id_sub = nt_table.getStringTopic("camera_id").subscribe(
-                config.CameraConfig.camera_id
+                self._camera_config.camera_id
             )
-            self._camera_resolution_width_sub = ntcore.getIntergerTopic(
+            self._camera_resolution_width_sub = nt_table.getIntegerTopic(
                 "camera_resolution_width"
-            ).subscribe(config.CameraConfig.camera_resolution_width)
-            self._camera_resolution_height_sub = ntcore.getIntergerTopic(
+            ).subscribe(self._camera_config.camera_resolution_width)
+            self._camera_resolution_height_sub = nt_table.getIntegerTopic(
                 "camera_resolution_height"
-            ).subscribe(config.CameraConfig.camera_resolution_height)
-            self._camera_auto_exposure_sub = ntcore.getIntergerTopic(
+            ).subscribe(self._camera_config.camera_resolution_height)
+            self._camera_auto_exposure_sub = nt_table.getIntegerTopic(
                 "camera_auto_exposure"
-            ).subscribe(config.CameraConfig.camera_auto_exposure)
-            self._camera_exposure_sub = ntcore.getDoubleTopic(
+            ).subscribe(self._camera_config.camera_auto_exposure)
+            self._camera_exposure_sub = nt_table.getDoubleTopic(
                 "camera_exposure"
-            ).subscribe(config.CameraConfig.camera_exposure)
-            self._camera_gain_sub = ntcore.getDoubleTopic("camera_gain").subscribe(
-                config.CameraConfig.camera_gain
+            ).subscribe(self._camera_config.camera_exposure)
+            self._camera_gain_sub = nt_table.getDoubleTopic("camera_gain").subscribe(
+                self._camera_config.camera_gain
             )
-            self._camera_denoise_sub = ntcore.getDoubleTopic(
+            self._camera_denoise_sub = nt_table.getDoubleTopic(
                 "camera_denoise"
-            ).subscribe(config.CameraConfig.camera_denoise)
+            ).subscribe(self._camera_config.camera_denoise)
 
-            # Logging configuration subscriptions
-            self._is_recording_sub = ntcore.getBooleanTopic("is_recording").subscribe(
-                config.LoggingConfig.is_recording
+            # Logging subscriptions
+            self._is_recording_sub = nt_table.getBooleanTopic("is_recording").subscribe(
+                self._logging_config.is_recording
             )
-            self._time_stamp_sub = ntcore.getDoubleTopic("time_stamp").subscribe(
-                config.LoggingConfig.time_stamp
+            self._time_stamp_sub = nt_table.getDoubleTopic("time_stamp").subscribe(
+                self._logging_config.time_stamp
             )
-            self._logging_location_sub = ntcore.getStringTopic(
+            self._logging_location_sub = nt_table.getStringTopic(
                 "logging_location"
-            ).subscribe(config.LoggingConfig.logging_location)
-            self._event_name_sub = ntcore.getStringTopic("event_name").subscribe(
-                config.LoggingConfig.event_name
+            ).subscribe(self._logging_config.logging_location)
+            self._event_name_sub = nt_table.getStringTopic("event_name").subscribe(
+                self._logging_config.event_name
             )
-            self._match_type_sub = ntcore.getStringTopic("match_type").subscribe(
-                config.LoggingConfig.match_type
+            self._match_type_sub = nt_table.getStringTopic("match_type").subscribe(
+                self._logging_config.match_type
             )
-            self._match_number_sub = ntcore.getIntergerTopic("match_number").subscribe(
-                config.LoggingConfig.match_number
+            self._match_number_sub = nt_table.getIntegerTopic("match_number").subscribe(
+                self._logging_config.match_number
             )
 
-            # AprilTag configuration subscriptions
-            self._fiducial_layout_sub = ntcore.getDoubleTopic(
+            # AprilTag subscriptions
+            self._fiducial_layout_sub = nt_table.getDoubleTopic(
                 "fiducial_layout"
-            ).subscribe(config.AprilTagConfig.fiducial_layout)
-            self._fiducial_size_sub = ntcore.getDoubleTopic("fiducial_size").subscribe(
-                config.AprilTagConfig.fiducial_size
-            )
+            ).subscribe(0.0)
+            self._fiducial_size_sub = nt_table.getDoubleTopic(
+                "fiducial_size"
+            ).subscribe(self._apriltag_config.fiducial_size)
 
-            # Object detection configuration subscriptions
-            self._backend_type_obj = ntcore.getStringTopic(
+            # Object detection subscriptions
+            self._backend_type_obj = nt_table.getStringTopic(
                 "backend_type_object"
-            ).subscribe(config.ObjConfig.backend)
+            ).subscribe(self._obj_config.backend)
 
             self._init_complete = True
 
-        # Apply latest values to config stores
-        config.CameraConfig.camera_id = self._camera_id_sub.get()
-        config.CameraConfig.camera_resolution_width = (
+        # Apply values
+        self._camera_config.camera_id = self._camera_id_sub.get()
+        self._camera_config.camera_resolution_width = (
             self._camera_resolution_width_sub.get()
         )
-        config.CameraConfig.camera_resolution_height = (
+        self._camera_config.camera_resolution_height = (
             self._camera_resolution_height_sub.get()
         )
-        config.CameraConfig.camera_auto_exposure = self._camera_auto_exposure_sub.get()
-        config.CameraConfig.camera_exposure = self._camera_exposure_sub.get()
-        config.CameraConfig.camera_gain = self._camera_gain_sub.get()
-        config.CameraConfig.camera_denoise = self._camera_denoise_sub.get()
+        self._camera_config.camera_auto_exposure = self._camera_auto_exposure_sub.get()
+        self._camera_config.camera_exposure = self._camera_exposure_sub.get()
+        self._camera_config.camera_gain = self._camera_gain_sub.get()
+        self._camera_config.camera_denoise = self._camera_denoise_sub.get()
 
-        config.LoggingConfig.is_recording = self._is_recording_sub.get()
-        config.LoggingConfig.time_stamp = self._time_stamp_sub.get()
-        config.LoggingConfig.logging_location = self._logging_location_sub.get()
-        config.LoggingConfig.event_name = self._event_name_sub.get()
-        config.LoggingConfig.match_type = self._match_type_sub.get()
-        config.LoggingConfig.match_number = self._match_number_sub.get()
+        self._logging_config.is_recording = self._is_recording_sub.get()
+        self._logging_config.time_stamp = int(self._time_stamp_sub.get())
+        self._logging_config.logging_location = self._logging_location_sub.get()
+        self._logging_config.event_name = self._event_name_sub.get()
+        self._logging_config.match_type = self._match_type_sub.get()
+        self._logging_config.match_number = self._match_number_sub.get()
 
-        config.AprilTagConfig.fiducial_size = self._fiducial_size_sub.get()
-        config.ObjConfig.backend = self._backend_type_obj.get()
+        self._apriltag_config.fiducial_size = self._fiducial_size_sub.get()
+        self._obj_config.backend = self._backend_type_obj.get()
 
         try:
-            config.AprilTagConfig.fiducial_layout = self._fiducial_layout_sub.get()
+            self._apriltag_config.fiducial_layout = self._fiducial_layout_sub.get()
         except Exception:
-            config.AprilTagConfig.fiducial_layout = None
+            self._apriltag_config.fiducial_layout = None
+
+
+def update_camera_constants_test(
+    config_store: config.CameraConfig,
+) -> None:
+    """Load test calibration data into a camera config."""
+    calibration_store = cv2.FileStorage(
+        "coprocessor/src/test/camera_calibration.json",
+        cv2.FILE_STORAGE_READ,
+    )
+
+    camera_matrix = calibration_store.getNode("camera_matrix").mat()
+    distortion_coefficients = calibration_store.getNode("distortion_coefficients").mat()
+
+    calibration_store.release()
+
+    if isinstance(camera_matrix, numpy.ndarray) and isinstance(
+        distortion_coefficients, numpy.ndarray
+    ):
+        config_store.camera_matrix = camera_matrix
+        config_store.distortion_coefficients = distortion_coefficients
+        config_store.has_config = True
