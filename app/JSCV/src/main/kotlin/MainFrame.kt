@@ -1,14 +1,15 @@
-import tabs.editorTabs.EditorTabs
 import tabs.cameraTabs.CameraTabs
+import tabs.cameraTabs.EditorTabs
 import javax.swing.*
 
 class MainFrame : JFrame("IDE Layout") {
 
     init {
         defaultCloseOperation = EXIT_ON_CLOSE
-        setSize(900, 600)
+        setSize(900, 700)
 
         val editorTabs = EditorTabs()
+        editorTabs.tabPlacement = JTabbedPane.BOTTOM
         val tabs = CameraTabs();
 
         val verticalSplit = JSplitPane(
@@ -16,7 +17,7 @@ class MainFrame : JFrame("IDE Layout") {
             tabs,
             editorTabs
         )
-        verticalSplit.resizeWeight = 0.7
+        verticalSplit.resizeWeight = 0.5
 
         add(verticalSplit)
     }

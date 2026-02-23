@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("commons-net:commons-net:3.9.0")
 
 }
 
