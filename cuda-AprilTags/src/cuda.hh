@@ -177,4 +177,4 @@ void CheckAndSynchronize(std::string_view message = "");
 void MaybeCheckAndSynchronize();
 void MaybeCheckAndSynchronize(std::string_view message);
 
-}  // namespace frc971::apriltag
+}
