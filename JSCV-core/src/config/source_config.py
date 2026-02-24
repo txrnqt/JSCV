@@ -169,7 +169,7 @@ def update_camera_constants_test(
 ) -> None:
     """Load test calibration data into a camera config."""
     calibration_store = cv2.FileStorage(
-        "coprocessor/src/test/camera_calibration.json",
+        "JSCV-core/src/test/camera_calibration.json",
         cv2.FILE_STORAGE_READ,
     )
 

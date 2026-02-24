@@ -18,7 +18,7 @@ class DetectorCoreML:
     Detected objects are stored internally and can be retrieved after inference.
     """
 
-    model: str = "coprocessor/src/models/jetson_orin nano.mlpackage/Data/com.apple.CoreML/model.mlmodel"
+    model: str = "JSCV-core/src/models/jetson_orin nano.mlpackage/Data/com.apple.CoreML/model.mlmodel"
     results: Optional[List[Results]] = None
 
     def __init__(self):
