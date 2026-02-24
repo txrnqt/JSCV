@@ -33,7 +33,7 @@ namespace preprocess {
         float k,
         float R);
 
-    __global__ void connectedBlobLabeling(
+    __global__ void connectedComponetLabeling(
         const uint8_t *binary_image,
         uint32_t *labeled_image,
         size_t width,
