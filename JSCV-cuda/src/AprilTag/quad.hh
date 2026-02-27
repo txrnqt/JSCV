@@ -44,7 +44,7 @@ namespace detect {
             return a;
         }
 
-        bool isValid(float min_area = 100.0f) const {
+        inline bool isValid(float min_area = 100.0f) const {
             if (area < min_area) return false;
 
             for (int i = 0; i < 4; ++i) {

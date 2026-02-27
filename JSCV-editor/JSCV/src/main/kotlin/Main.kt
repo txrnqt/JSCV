@@ -4,4 +4,6 @@ fun main() {
     SwingUtilities.invokeLater {
         MainFrame().isVisible = true
     }
+
+    JavaGen()
 }
