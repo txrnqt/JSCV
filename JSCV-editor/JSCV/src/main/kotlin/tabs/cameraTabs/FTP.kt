@@ -311,7 +311,7 @@ class CameraTab(
                             )
                         }
                     } else {
-                        throw Exception("FTP server rejected download request")
+                        throw Exception("FTP serverWorkers.server rejected download request")
                     }
                 }
             } catch (e: Exception) {
@@ -356,7 +356,7 @@ class CameraTab(
                             )
                         }
                     } else {
-                        throw Exception("FTP server rejected delete request")
+                        throw Exception("FTP serverWorkers.server rejected delete request")
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()

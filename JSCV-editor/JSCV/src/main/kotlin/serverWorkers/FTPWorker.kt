@@ -24,7 +24,7 @@ class FTPWorker {
 
                     if (!FTPReply.isPositiveCompletion(ftp!!.replyCode)) {
                         ftp!!.disconnect()
-                        throw Exception("FTP server refused connection")
+                        throw Exception("FTP serverWorkers.server refused connection")
                     }
 
                     if (!ftp!!.login(username, password)) {
@@ -135,7 +135,7 @@ class FTPWorker {
             override fun doInBackground() {
                 try {
                     if (!isConnected) {
-                        throw Exception("Not connected to FTP server")
+                        throw Exception("Not connected to FTP serverWorkers.server")
                     }
 
                     val file = File(localPath)
@@ -174,7 +174,7 @@ class FTPWorker {
             override fun doInBackground() {
                 try {
                     if (!isConnected) {
-                        throw Exception("Not connected to FTP server")
+                        throw Exception("Not connected to FTP serverWorkers.server")
                     }
 
                     val localFile = File(localPath)
@@ -210,7 +210,7 @@ class FTPWorker {
             override fun doInBackground() {
                 try {
                     if (!isConnected) {
-                        throw Exception("Not connected to FTP server")
+                        throw Exception("Not connected to FTP serverWorkers.server")
                     }
 
                     if (!ftp!!.deleteFile(remotePath)) {
